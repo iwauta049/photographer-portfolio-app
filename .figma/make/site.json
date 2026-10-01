@@ -1,0 +1,10 @@
+{
+  "description": "Showcase a photographer's portfolio with dedicated photo galleries, detailed image pages, blog articles, and easy upload options for clients and the owner.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
