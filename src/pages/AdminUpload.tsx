@@ -15,7 +15,9 @@ export default function AdminUpload() {
   const [tagInput, setTagInput] = useState("");
   const [preview, setPreview] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -43,26 +45,46 @@ export default function AdminUpload() {
 
   function handleFile(file: File) {
     setUploading(true);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
-      set("src", dataUrl);
-      set("thumb", dataUrl);
-      setPreview(dataUrl);
-      // Try to get dimensions
-      const img = new Image();
-      img.onload = () => {
-        set("width", img.naturalWidth);
-        set("height", img.naturalHeight);
+    setError("");
+
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+
+    img.onload = () => {
+      try {
+        const src = resizeImage(img, 1400, 0.78, 900_000);
+        setForm((current) => ({
+          ...current,
+          src,
+          // Reusing the resized source avoids storing a second base64 copy.
+          thumb: src,
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+        }));
+        setPreview(src);
+      } catch {
+        setError("This image could not be processed. Please try a JPEG, PNG, or WebP file.");
+      } finally {
+        URL.revokeObjectURL(objectUrl);
         setUploading(false);
-      };
-      img.src = dataUrl;
+      }
     };
-    reader.readAsDataURL(file);
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      setUploading(false);
+      setError("This image could not be opened. Please try a JPEG, PNG, or WebP file.");
+    };
+
+    img.src = objectUrl;
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (uploading || saving) return;
+
+    setSaving(true);
+    setError("");
     const tags = tagInput.split(",").map((t) => t.trim()).filter(Boolean);
     const photo: Photo = {
       id: editId || `p${Date.now()}`,
@@ -79,9 +101,23 @@ export default function AdminUpload() {
       width: form.width || 1600,
       height: form.height || 1067,
     };
-    savePhoto(photo);
-    setSaved(true);
-    setTimeout(() => navigate(`/photo/${photo.id}`), 800);
+    try {
+      savePhoto(photo);
+      setSaved(true);
+      setTimeout(() => navigate(`/photo/${photo.id}`), 800);
+    } catch (err) {
+      const storageFull =
+        err instanceof DOMException &&
+        (err.name === "QuotaExceededError" ||
+          err.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+          err.code === 22);
+      setError(
+        storageFull
+          ? "Browser storage is full. Remove an existing uploaded photograph, then try again."
+          : "Changes could not be saved. Please try again.",
+      );
+      setSaving(false);
+    }
   }
 
   return (
@@ -139,6 +175,7 @@ export default function AdminUpload() {
                   set("src", e.target.value);
                   set("thumb", e.target.value);
                   setPreview(e.target.value);
+                  setError("");
                 }}
                 className="w-full bg-[#111009] border border-[#2a2620] text-[#e8ddd0] placeholder:text-[#3a3630] text-sm font-light px-4 py-3 focus:outline-none focus:border-[#c9a87c] transition-colors"
               />
@@ -181,15 +218,20 @@ export default function AdminUpload() {
           <div className="flex gap-4 pt-4">
             <button
               type="submit"
-              disabled={saved || uploading}
+              disabled={saved || uploading || saving}
               className="text-xs tracking-[0.2em] uppercase bg-[#c9a87c] text-[#0a0908] px-8 py-3 hover:bg-[#e8ddd0] transition-colors font-medium disabled:opacity-50"
             >
-              {saved ? "Saved ✓" : editId ? "Save Changes" : "Publish"}
+              {saved ? "Saved ✓" : saving ? "Saving…" : editId ? "Save Changes" : "Publish"}
             </button>
             <Link to="/admin" className="text-xs tracking-[0.2em] uppercase border border-[#2a2620] text-[#5a5248] px-8 py-3 hover:border-[#5a5248] transition-colors">
               Cancel
             </Link>
           </div>
+          {error && (
+            <p role="alert" className="text-sm text-[#c9a87c]">
+              {error}
+            </p>
+          )}
         </form>
       </div>
 
@@ -210,6 +252,35 @@ export default function AdminUpload() {
       `}</style>
     </div>
   );
+}
+
+function resizeImage(
+  img: HTMLImageElement,
+  maxDimension: number,
+  initialQuality: number,
+  maxDataLength: number,
+) {
+  let scale = Math.min(1, maxDimension / Math.max(img.naturalWidth, img.naturalHeight));
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Canvas is unavailable");
+
+  let quality = initialQuality;
+  let dataUrl = "";
+
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+    context.drawImage(img, 0, 0, canvas.width, canvas.height);
+    dataUrl = canvas.toDataURL("image/jpeg", quality);
+
+    if (dataUrl.length <= maxDataLength) return dataUrl;
+
+    scale *= 0.82;
+    quality = Math.max(0.58, quality - 0.05);
+  }
+
+  return dataUrl;
 }
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {

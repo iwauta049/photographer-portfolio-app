@@ -15,22 +15,22 @@ export default function Contact() {
           <div className="mt-12 space-y-8">
             <ContactItem
               label="Email"
-              value="marco@marcolevi.com"
-              href="mailto:marco@marcolevi.com"
+              value="poojan.gohil@gmail.com"
+              href="mailto:poojan.gohil@gmail.com"
             />
             <ContactItem
               label="Instagram"
-              value="@marcolevi.photo"
-              href="https://instagram.com"
+              value="@poojan_gohil"
+              href="https://www.instagram.com/poojan_gohil/?hl=ja"
             />
             <ContactItem
               label="Based in"
-              value="Milan, Italy — available to travel"
+              value="Alberta, Canada — available to travel"
             />
-            <ContactItem
+            {/* <ContactItem
               label="Represented by"
               value="Aperture Agency, London"
-            />
+            /> */}
           </div>
         </div>
 

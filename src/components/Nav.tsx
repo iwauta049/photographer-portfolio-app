@@ -26,7 +26,7 @@ export default function Nav() {
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-6 md:px-16"
       style={{ background: "linear-gradient(to bottom, rgba(10,9,8,0.95) 0%, rgba(10,9,8,0) 100%)" }}>
       <Link to="/" className="font-['DM_Serif_Display'] text-lg tracking-widest uppercase text-[#e8ddd0] hover:text-[#c9a87c]">
-        Marco Levi
+        Poojan Gohil
       </Link>
 
       {/* Desktop links */}

@@ -31,7 +31,7 @@ export default function Gallery() {
         <div className="relative z-10 max-w-3xl">
           <p className="text-xs tracking-[0.25em] uppercase text-[#c9a87c] mb-4">Photography</p>
           <h1 className="font-['DM_Serif_Display'] text-5xl md:text-7xl text-[#e8ddd0] leading-tight">
-            Marco Levi
+            Poojan Gohil
           </h1>
           <p className="mt-4 text-[#7a7062] text-sm tracking-wide max-w-md leading-relaxed">
             Landscape & portrait photographer. Working with available light across Europe, Asia, and the Americas.

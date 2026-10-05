@@ -42,8 +42,15 @@ export default function PhotoDetail() {
 
   return (
     <div className="min-h-screen bg-[#0a0908]">
+      {/* Back */}
+      {/* <div className="px-8 md:px-16 pt-24 pb-6">
+        <Link to="/" className="text-xs tracking-[0.18em] uppercase text-[#5a5248] hover:text-[#c9a87c] transition-colors">
+          ← All Work
+        </Link>
+      </div> */}
+
       {/* Full-width image */}
-      <div className={`w-full ${isPortrait ? "flex justify-center pt-24 px-4 md:px-16" : ""}`}>
+      <div className={`w-full ${isPortrait ? "flex justify-center px-4 md:px-16" : ""}`}>
         {isPortrait ? (
           <img
             src={photo.src}
