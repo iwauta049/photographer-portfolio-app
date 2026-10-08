@@ -12,6 +12,7 @@ export interface Photo {
   settings?: string;
   width: number;
   height: number;
+  uploadedAt?: string;
 }
 
 export interface BlogPost {
@@ -23,11 +24,43 @@ export interface BlogPost {
   date: string;
   coverImage: string;
   readTime: number;
+  status?: "draft" | "published";
+  tags?: string[];
+  uploadedAt?: string;
+}
+
+export interface Profile {
+  heroImage: string;
+  profileImage?: string;
+  location: string;
+  bio: string;
+  description: string;
+  instagramUrl: string;
+  facebookUrl: string;
+  ebirdUrl: string;
+}
+
+export function getUploadedAt(item: {
+  id: string;
+  date: string;
+  uploadedAt?: string;
+}) {
+  if (item.uploadedAt) return item.uploadedAt;
+
+  const timestamp = Number(item.id.slice(1));
+  if (Number.isFinite(timestamp) && timestamp > 1_000_000_000_000) {
+    return new Date(timestamp).toISOString();
+  }
+
+  return item.date;
 }
 
 const PHOTOS_KEY = "portfolio_photos";
 const BLOGS_KEY = "portfolio_blogs";
 const ADMIN_KEY = "portfolio_admin_auth";
+const PROFILE_KEY = "portfolio_profile";
+const CONTENT_VERSION_KEY = "portfolio_content_version";
+const CONTENT_VERSION = "2";
 
 const SEED_PHOTOS: Photo[] = [
   {
@@ -210,7 +243,62 @@ const SEED_PHOTOS: Photo[] = [
     width: 1067,
     height: 1600,
   },
+  {
+    id: "p13",
+    title: "A Flash of Blue",
+    description: "A small forest bird pauses in open light for a fraction of a second before disappearing back into the canopy.",
+    location: "Uttarakhand, India",
+    date: "2024-05-18",
+    src: "https://images.unsplash.com/photo-1574068468668-a05a11f871da?w=1600&fit=crop&auto=format",
+    thumb: "https://images.unsplash.com/photo-1574068468668-a05a11f871da?w=800&fit=crop&auto=format",
+    tags: ["bird", "wildlife", "favorite"],
+    camera: "Sony A1",
+    lens: "600mm f/4",
+    settings: "f/5.6, 1/2000s, ISO 800",
+    width: 900,
+    height: 1600,
+  },
+  {
+    id: "p14",
+    title: "The Watcher",
+    description: "A lion rests above the plain, still and attentive, as the last warm light moves across the rock.",
+    location: "Maasai Mara, Kenya",
+    date: "2024-02-09",
+    src: "https://images.unsplash.com/photo-1665844092826-515257903c4c?w=1600&fit=crop&auto=format",
+    thumb: "https://images.unsplash.com/photo-1665844092826-515257903c4c?w=800&fit=crop&auto=format",
+    tags: ["mammal", "wildlife", "favorite"],
+    camera: "Nikon Z9",
+    lens: "400mm f/2.8",
+    settings: "f/4, 1/1600s, ISO 640",
+    width: 1067,
+    height: 1600,
+  },
+  {
+    id: "p15",
+    title: "Emerald Stillness",
+    description: "A tiny frog holds perfectly still against the curve of a leaf, its world reduced to green, texture, and rain.",
+    location: "Monteverde, Costa Rica",
+    date: "2024-04-21",
+    src: "https://images.unsplash.com/photo-1649656909369-617620472119?w=1600&fit=crop&auto=format",
+    thumb: "https://images.unsplash.com/photo-1649656909369-617620472119?w=800&fit=crop&auto=format",
+    tags: ["wildlife", "amphibian", "macro"],
+    camera: "Canon EOS R5",
+    lens: "100mm f/2.8 Macro",
+    settings: "f/8, 1/250s, ISO 1000",
+    width: 900,
+    height: 1600,
+  },
 ];
+
+const DEFAULT_PROFILE: Profile = {
+  heroImage: SEED_PHOTOS[0].src,
+  location: "North America",
+  bio: "Wildlife, landscape and street photography. Working with available light across the natural and human world.",
+  description: "My name is Poojan Gohil, and I am a photographer based in North America. I specialize in wildlife, landscape, and street photography, capturing the world as it is with a focus on natural light. My work aims to tell stories through images, highlighting the beauty and complexity of both nature and human life.",
+  instagramUrl: "https://www.instagram.com/poojan_gohil/?hl=ja",
+  facebookUrl: "",
+  ebirdUrl: "https://ebird.org/profile/NjUzNTk0/CA-AB",
+};
 
 const SEED_BLOGS: BlogPost[] = [
   {
@@ -272,9 +360,19 @@ But beyond the technical: printing taught me which of my photographs actually ha
 ];
 
 function init() {
-  if (!localStorage.getItem(PHOTOS_KEY)) {
+  const storedPhotos = localStorage.getItem(PHOTOS_KEY);
+  if (!storedPhotos) {
     localStorage.setItem(PHOTOS_KEY, JSON.stringify(SEED_PHOTOS));
+  } else if (localStorage.getItem(CONTENT_VERSION_KEY) !== CONTENT_VERSION) {
+    const photos: Photo[] = JSON.parse(storedPhotos);
+    const newPhotos = SEED_PHOTOS.filter(
+      (seedPhoto) =>
+        ["p13", "p14", "p15"].includes(seedPhoto.id) &&
+        !photos.some((photo) => photo.id === seedPhoto.id),
+    );
+    localStorage.setItem(PHOTOS_KEY, JSON.stringify([...photos, ...newPhotos]));
   }
+  localStorage.setItem(CONTENT_VERSION_KEY, CONTENT_VERSION);
   if (!localStorage.getItem(BLOGS_KEY)) {
     localStorage.setItem(BLOGS_KEY, JSON.stringify(SEED_BLOGS));
   }
@@ -328,6 +426,17 @@ export function saveBlog(post: BlogPost) {
 export function deleteBlog(id: string) {
   const blogs = getBlogs().filter((b) => b.id !== id);
   localStorage.setItem(BLOGS_KEY, JSON.stringify(blogs));
+}
+
+export function getProfile(): Profile {
+  const storedProfile = localStorage.getItem(PROFILE_KEY);
+  return storedProfile
+    ? { ...DEFAULT_PROFILE, ...JSON.parse(storedProfile) }
+    : DEFAULT_PROFILE;
+}
+
+export function saveProfile(profile: Profile) {
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
 }
 
 export function isAdmin(): boolean {

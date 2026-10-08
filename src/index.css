@@ -20,7 +20,7 @@
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);
 }
-
+/* 
 :root {
   --background: #0a0908;
   --foreground: #e8ddd0;
@@ -37,6 +37,24 @@
   --border: #2a2620;
   --ring: #c9a87c;
   --radius: 2px;
+} */
+
+:root {
+  --background: #faf6ef;
+  --foreground: #4a2d09;
+  --card: #fffdf8;
+  --card-foreground: #150e08;
+  --primary: #8a6a3b;
+  --primary-foreground: #fffdf8;
+  --secondary: #f0e8da;
+  --secondary-foreground: #4a4034;
+  --muted: #f0e8da;
+  --muted-foreground: #756a5a;
+  --accent: #8a6a3b;
+  --accent-foreground: #fffdf8;
+  --border: #e0d6c3;
+  --ring: #8a6a3b;
+  --radius: 2px;
 }
 
 * {
@@ -52,7 +70,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4 {
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
   font-family: 'DM Serif Display', serif;
   font-weight: 400;
 }
@@ -62,19 +88,23 @@ h1, h2, h3, h4 {
   width: 4px;
   height: 4px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 2px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
 }
 
 /* Smooth transitions */
-a, button {
+a,
+button {
   transition: color 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
 }
 

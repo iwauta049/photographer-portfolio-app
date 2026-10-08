@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { getPhoto, getPhotos, deletePhoto, isAdmin, type Photo } from "../data/store";
 
 export default function PhotoDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [photo, setPhoto] = useState<Photo | undefined>();
   const [adjacent, setAdjacent] = useState<{ prev?: Photo; next?: Photo }>({});
   const admin = isAdmin();
@@ -24,7 +25,7 @@ export default function PhotoDetail() {
 
   if (!photo) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-[#5a5248] text-sm tracking-widest uppercase">
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm tracking-widest uppercase">
         Photograph not found.
       </div>
     );
@@ -39,99 +40,114 @@ export default function PhotoDetail() {
   }
 
   const isPortrait = photo.height > photo.width;
+  const fromCategory = (location.state as { fromCategory?: string } | null)?.fromCategory;
+  const backPath = fromCategory
+    ? `/?category=${encodeURIComponent(fromCategory)}`
+    : "/";
+  const backLabel = fromCategory ? `← ${fromCategory}` : "← Portfolio";
 
   return (
-    <div className="min-h-screen bg-[#0a0908]">
-      {/* Back */}
-      {/* <div className="px-8 md:px-16 pt-24 pb-6">
-        <Link to="/" className="text-xs tracking-[0.18em] uppercase text-[#5a5248] hover:text-[#c9a87c] transition-colors">
-          ← All Work
+    <div className="min-h-screen bg-background">
+      {/* Photograph and details */}
+      <div className="relative pt-24 lg:grid lg:h-screen lg:grid-cols-[minmax(0,2fr)_minmax(22rem,1fr)]">
+        <Link
+          to={backPath}
+          className="absolute z-10 h-fit w-fit bg-background/65 px-3 py-2 text-xs tracking-[0.18em] uppercase text-foreground backdrop-blur-sm hover:text-accent transition-colors"
+          style={{ top: "90px", right: "564px", bottom: "441px", left: "10px" }}
+        >
+          {backLabel}
         </Link>
-      </div> */}
-
-      {/* Full-width image */}
-      <div className={`w-full ${isPortrait ? "flex justify-center px-4 md:px-16" : ""}`}>
-        {isPortrait ? (
-          <img
-            src={photo.src}
-            alt={photo.title}
-            className="max-h-[85vh] w-auto object-contain"
-            style={{ maxWidth: "min(600px, 100%)" }}
-          />
-        ) : (
-          <img
-            src={photo.src}
-            alt={photo.title}
-            className="w-full object-cover pt-0"
-            style={{ maxHeight: "90vh", objectPosition: "center" }}
-          />
-        )}
-      </div>
-
-      {/* Metadata section */}
-      <div className="px-8 md:px-16 py-16 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
-        {/* Left — title + description */}
-        <div className="md:col-span-2">
-          <h1 className="font-['DM_Serif_Display'] text-4xl md:text-5xl text-[#e8ddd0] leading-tight mb-6">
-            {photo.title}
-          </h1>
-          <p className="text-[#c4b89e] text-base leading-relaxed font-light max-w-xl">
-            {photo.description}
-          </p>
-
-          <div className="mt-8 flex flex-wrap gap-2">
-            {photo.tags.map((tag) => (
-              <span key={tag} className="text-[10px] tracking-[0.2em] uppercase text-[#5a5248] border border-[#2a2620] px-3 py-1">
-                {tag}
-              </span>
-            ))}
-          </div>
-
-          {admin && (
-            <div className="mt-10 flex gap-4">
-              <Link
-                to={`/admin/upload?edit=${photo.id}`}
-                className="text-xs tracking-[0.18em] uppercase text-[#c9a87c] border border-[#c9a87c] px-5 py-2 hover:bg-[#c9a87c] hover:text-[#0a0908] transition-colors"
-              >
-                Edit
-              </Link>
-              <button
-                onClick={handleDelete}
-                className="text-xs tracking-[0.18em] uppercase text-[#5a5248] border border-[#2a2620] px-5 py-2 hover:border-[#c9a87c] hover:text-[#c9a87c] transition-colors"
-              >
-                Delete
-              </button>
-            </div>
+        <div
+          className={`w-full lg:flex lg:h-[calc(100vh-6rem)] lg:items-center lg:justify-center lg:p-8 ${isPortrait ? "flex justify-center px-4 md:px-16" : ""
+            }`}
+        >
+          {isPortrait ? (
+            <img
+              src={photo.src}
+              alt={photo.title}
+              className="max-h-[85vh] w-auto object-contain lg:max-h-full"
+              style={{ maxWidth: "min(600px, 100%)" }}
+            />
+          ) : (
+            <img
+              src={photo.src}
+              alt={photo.title}
+              className="w-full object-cover lg:max-h-full lg:object-contain"
+              style={{ maxHeight: "90vh", objectPosition: "center" }}
+            />
           )}
         </div>
 
-        {/* Right — technical details */}
-        <div className="border-l border-[#2a2620] pl-8 space-y-6">
-          <MetaItem label="Location" value={photo.location} />
-          <MetaItem label="Date" value={formatDate(photo.date)} />
-          {photo.camera && <MetaItem label="Camera" value={photo.camera} />}
-          {photo.lens && <MetaItem label="Lens" value={photo.lens} />}
-          {photo.settings && <MetaItem label="Exposure" value={photo.settings} />}
-        </div>
+        <aside className="px-8 py-16 md:px-16 lg:h-[calc(100vh-6rem)] lg:overflow-y-auto lg:accent-l lg:accent-accent lg:px-10 lg:py-10">
+          <div>
+            <h1 className="font-['DM_Serif_Display'] text-4xl text-foreground leading-tight mb-6 xl:text-5xl">
+              {photo.title}
+            </h1>
+            <p className="text-card-foreground text-base leading-relaxed font-light">
+              {photo.description}
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-2">
+              {photo.tags.map((tag) => (
+                <span key={tag} className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground accent accent-accent px-3 py-1 border border-border">
+                  {tag}
+                </span>
+              ))}
+            </div>
+
+            {admin && (
+              <div className="mt-10 flex gap-4">
+                <Link
+                  to={`/admin/upload?edit=${photo.id}`}
+                  className="text-xs tracking-[0.18em] uppercase text-accent accent accent-accent px-5 py-2 hover:bg-accent hover:text-background transition-colors"
+                >
+                  Edit
+                </Link>
+                <button
+                  onClick={handleDelete}
+                  className="text-xs tracking-[0.18em] uppercase text-muted-foreground accent accent-accent px-5 py-2 hover:accent-accent hover:text-accent transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-12 grid grid-cols-1 gap-6 accent-t accent-accent pt-8 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            <MetaItem label="Location" value={photo.location} />
+            <MetaItem label="Date" value={formatDate(photo.date)} />
+            {photo.camera && <MetaItem label="Camera" value={photo.camera} />}
+            {photo.lens && <MetaItem label="Lens" value={photo.lens} />}
+            {photo.settings && <MetaItem label="Exposure" value={photo.settings} />}
+          </div>
+        </aside>
       </div>
 
       {/* Prev / next navigation */}
-      <div className="border-t border-[#2a2620] grid grid-cols-2">
+      <div className="accent-t accent-accent grid grid-cols-2">
         {adjacent.prev ? (
-          <Link to={`/photo/${adjacent.prev.id}`} className="group flex items-center gap-5 p-8 hover:bg-[#111009] transition-colors">
+          <Link
+            to={`/photo/${adjacent.prev.id}`}
+            state={{ fromCategory }}
+            className="group flex items-center gap-5 p-8 hover:bg-secondary-foreground transition-colors"
+          >
             <img src={adjacent.prev.thumb} alt={adjacent.prev.title} className="w-20 h-14 object-cover opacity-50 group-hover:opacity-100 transition-opacity" />
             <div>
-              <p className="text-[10px] tracking-[0.2em] uppercase text-[#5a5248] mb-1">← Previous</p>
-              <p className="font-['DM_Serif_Display'] text-lg text-[#c4b89e] group-hover:text-[#e8ddd0] transition-colors">{adjacent.prev.title}</p>
+              <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-1">← Previous</p>
+              <p className="font-['DM_Serif_Display'] text-lg text-card-foreground group-hover:text-foreground transition-colors">{adjacent.prev.title}</p>
             </div>
           </Link>
         ) : <div />}
 
         {adjacent.next ? (
-          <Link to={`/photo/${adjacent.next.id}`} className="group flex items-center justify-end gap-5 p-8 hover:bg-[#111009] transition-colors border-l border-[#2a2620] text-right">
+          <Link
+            to={`/photo/${adjacent.next.id}`}
+            state={{ fromCategory }}
+            className="group flex items-center justify-end gap-5 p-8 hover:bg-secondary-foreground transition-colors accent-l accent-accent text-right"
+          >
             <div>
-              <p className="text-[10px] tracking-[0.2em] uppercase text-[#5a5248] mb-1">Next →</p>
-              <p className="font-['DM_Serif_Display'] text-lg text-[#c4b89e] group-hover:text-[#e8ddd0] transition-colors">{adjacent.next.title}</p>
+              <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-1">Next →</p>
+              <p className="font-['DM_Serif_Display'] text-lg text-card-foreground group-hover:text-foreground transition-colors">{adjacent.next.title}</p>
             </div>
             <img src={adjacent.next.thumb} alt={adjacent.next.title} className="w-20 h-14 object-cover opacity-50 group-hover:opacity-100 transition-opacity" />
           </Link>
@@ -140,8 +156,8 @@ export default function PhotoDetail() {
 
       {/* Back */}
       <div className="px-8 md:px-16 py-8">
-        <Link to="/" className="text-xs tracking-[0.18em] uppercase text-[#5a5248] hover:text-[#c9a87c] transition-colors">
-          ← All Work
+        <Link to={backPath} className="text-xs tracking-[0.18em] uppercase text-muted-foreground hover:text-accent transition-colors">
+          {backLabel}
         </Link>
       </div>
     </div>
@@ -151,8 +167,8 @@ export default function PhotoDetail() {
 function MetaItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] tracking-[0.2em] uppercase text-[#5a5248] mb-1">{label}</p>
-      <p className="text-sm text-[#c4b89e] font-light">{value}</p>
+      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-1">{label}</p>
+      <p className="text-sm text-card-foreground font-light">{value}</p>
     </div>
   );
 }

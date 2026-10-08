@@ -1,14 +1,20 @@
+import { getProfile } from "../data/store";
+
 export default function Contact() {
+  const profile = getProfile();
+
   return (
-    <div className="min-h-screen bg-[#0a0908] pt-32 px-8 md:px-16 pb-24">
+    <div
+      key="contact-page-current"
+      className="min-h-screen bg-background pt-32 px-8 md:px-16 pb-24"
+    >
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-24 items-start">
         {/* Left */}
         <div>
-          <p className="text-xs tracking-[0.25em] uppercase text-[#c9a87c] mb-4">Contact</p>
-          <h1 className="font-['DM_Serif_Display'] text-5xl md:text-6xl text-[#e8ddd0] leading-tight mb-8">
-            Let's make<br />something.
+          <h1 className="font-['DM_Serif_Display'] text-5xl md:text-6xl text-foreground leading-tight mb-8">
+            Contact
           </h1>
-          <p className="text-[#7a7062] font-light leading-relaxed text-sm max-w-sm">
+          <p className="text-secondary-foreground font-light leading-relaxed text-sm max-w-sm">
             Available for editorial commissions, fine art print orders, and exhibition inquiries. Response within two business days.
           </p>
 
@@ -21,21 +27,22 @@ export default function Contact() {
             <ContactItem
               label="Instagram"
               value="@poojan_gohil"
-              href="https://www.instagram.com/poojan_gohil/?hl=ja"
+              href={profile.instagramUrl || undefined}
+            />
+            <ContactItem
+              label="eBird"
+              value="View eBird profile"
+              href={profile.ebirdUrl || undefined}
             />
             <ContactItem
               label="Based in"
-              value="Alberta, Canada — available to travel"
+              value="Calgary, Alberta, Canada"
             />
-            {/* <ContactItem
-              label="Represented by"
-              value="Aperture Agency, London"
-            /> */}
           </div>
         </div>
 
         {/* Right — form */}
-        <div>
+        <div className="md:mt-8">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -48,7 +55,7 @@ export default function Contact() {
             <FormField label="Email" id="email" type="email" placeholder="your@email.com" required />
             <FormField label="Subject" id="subject" placeholder="Commission, print inquiry, etc." />
             <div>
-              <label htmlFor="message" className="block text-[10px] tracking-[0.2em] uppercase text-[#5a5248] mb-2">
+              <label htmlFor="message" className="block text-[10px] tracking-[0.2em] uppercase text-card-foreground mb-2">
                 Message
               </label>
               <textarea
@@ -56,12 +63,12 @@ export default function Contact() {
                 rows={6}
                 placeholder="Tell me about your project..."
                 required
-                className="w-full bg-[#111009] border border-[#2a2620] text-[#e8ddd0] placeholder:text-[#3a3630] text-sm font-light px-4 py-3 focus:outline-none focus:border-[#c9a87c] transition-colors resize-none"
+                className="w-full bg-card border border-border text-card-foreground placeholder:text-primary text-sm font-light px-4 py-3 focus:outline-none focus:border-border transition-colors resize-none"
               />
             </div>
             <button
               type="submit"
-              className="text-xs tracking-[0.2em] uppercase bg-[#c9a87c] text-[#0a0908] px-8 py-3 hover:bg-[#e8ddd0] transition-colors font-medium"
+              className="text-xs tracking-[0.2em] uppercase bg-primary text-primary-foreground px-8 py-3 hover:bg-foreground transition-colors font-medium"
             >
               Send Message
             </button>
@@ -69,19 +76,6 @@ export default function Contact() {
         </div>
       </div>
 
-      {/* Print ordering note */}
-      <div className="max-w-5xl mx-auto mt-24 pt-12 border-t border-[#2a2620] grid grid-cols-1 md:grid-cols-3 gap-8">
-        {[
-          { title: "Fine Art Prints", body: "All prints are made on archival cotton rag or baryta paper, signed and numbered. Limited editions of 10." },
-          { title: "Editorial", body: "Available for magazine features, book projects, and long-form documentary work. Rates on request." },
-          { title: "Workshops", body: "Annual field workshops in Scotland, Patagonia, and Japan. Intimately sized — maximum six participants." },
-        ].map((item) => (
-          <div key={item.title}>
-            <h3 className="font-['DM_Serif_Display'] text-xl text-[#e8ddd0] mb-3">{item.title}</h3>
-            <p className="text-[#7a7062] text-sm font-light leading-relaxed">{item.body}</p>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -89,11 +83,18 @@ export default function Contact() {
 function ContactItem({ label, value, href }: { label: string; value: string; href?: string }) {
   return (
     <div>
-      <p className="text-[10px] tracking-[0.2em] uppercase text-[#5a5248] mb-1">{label}</p>
+      <p className="text-[10px] tracking-[0.2em] uppercase text-secondary-foreground mb-1">{label}</p>
       {href ? (
-        <a href={href} className="text-sm text-[#c4b89e] hover:text-[#c9a87c] transition-colors font-light">{value}</a>
+        <a
+          href={href}
+          target={href.startsWith("http") ? "_blank" : undefined}
+          rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+          className="text-sm text-foreground hover:text-primary transition-colors font-light"
+        >
+          {value}
+        </a>
       ) : (
-        <p className="text-sm text-[#c4b89e] font-light">{value}</p>
+        <p className="text-sm text-foreground font-light">{value}</p>
       )}
     </div>
   );
@@ -106,7 +107,7 @@ function FormField({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="block text-[10px] tracking-[0.2em] uppercase text-[#5a5248] mb-2">
+      <label htmlFor={id} className="block text-[10px] tracking-[0.2em] uppercase text-card-foreground mb-2">
         {label}
       </label>
       <input
@@ -114,7 +115,7 @@ function FormField({
         type={type}
         placeholder={placeholder}
         required={required}
-        className="w-full bg-[#111009] border border-[#2a2620] text-[#e8ddd0] placeholder:text-[#3a3630] text-sm font-light px-4 py-3 focus:outline-none focus:border-[#c9a87c] transition-colors"
+        className="w-full bg-card border border-border text-primary placeholder:text-muted-foreground text-sm font-light px-4 py-3 focus:outline-none focus:border-border transition-colors"
       />
     </div>
   );

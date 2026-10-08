@@ -1,6 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { getPhoto, savePhoto, isAdmin, type Photo } from "../data/store";
+import { getPhoto, getUploadedAt, savePhoto, isAdmin, type Photo } from "../data/store";
+
+const CATEGORY_OPTIONS = [
+  { label: "Favorites", tag: "favorite", aliases: ["favorite", "favorites"] },
+  { label: "Birds", tag: "bird", aliases: ["bird", "birds"] },
+  { label: "Mammals", tag: "mammal", aliases: ["mammal", "mammals"] },
+  { label: "Other Wildlife", tag: "wildlife", aliases: ["wildlife"] },
+  { label: "Landscape", tag: "landscape", aliases: ["landscape"] },
+  { label: "Street", tag: "street", aliases: ["street"] },
+] as const;
+
+const CATEGORY_ALIASES = new Set<string>(CATEGORY_OPTIONS.flatMap((option) => option.aliases));
 
 export default function AdminUpload() {
   const navigate = useNavigate();
@@ -13,6 +24,7 @@ export default function AdminUpload() {
     src: "", thumb: "", tags: [], camera: "", lens: "", settings: "", width: 1600, height: 1067,
   });
   const [tagInput, setTagInput] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [preview, setPreview] = useState("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -24,9 +36,24 @@ export default function AdminUpload() {
     if (editId) {
       const p = getPhoto(editId);
       if (p) {
+        const normalizedTags = p.tags.map((tag) => tag.toLowerCase());
+        const isBirdOrMammal = normalizedTags.some((tag) =>
+          ["bird", "birds", "mammal", "mammals"].includes(tag),
+        );
         setForm(p);
         setPreview(p.thumb || p.src);
-        setTagInput(p.tags.join(", "));
+        setSelectedCategories(
+          CATEGORY_OPTIONS.filter(
+            (option) =>
+              !(option.tag === "wildlife" && isBirdOrMammal) &&
+              option.aliases.some((alias) => normalizedTags.includes(alias)),
+          ).map((option) => option.tag),
+        );
+        setTagInput(
+          p.tags
+            .filter((tag) => !CATEGORY_ALIASES.has(tag.toLowerCase()))
+            .join(", "),
+        );
       }
     }
   }, [editId]);
@@ -34,13 +61,21 @@ export default function AdminUpload() {
   if (!admin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-[#5a5248] text-sm">Access denied. <Link to="/admin" className="text-[#c9a87c]">Sign in</Link></p>
+        <p className="text-muted-foreground text-sm">Access denied. <Link to="/admin" className="text-primary">Sign in</Link></p>
       </div>
     );
   }
 
   function set(key: keyof Photo, value: unknown) {
     setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  function toggleCategory(tag: string) {
+    setSelectedCategories((categories) =>
+      categories.includes(tag)
+        ? categories.filter((category) => category !== tag)
+        : [...categories, tag],
+    );
   }
 
   function handleFile(file: File) {
@@ -85,7 +120,8 @@ export default function AdminUpload() {
 
     setSaving(true);
     setError("");
-    const tags = tagInput.split(",").map((t) => t.trim()).filter(Boolean);
+    const additionalTags = tagInput.split(",").map((t) => t.trim()).filter(Boolean);
+    const tags = [...new Set([...selectedCategories, ...additionalTags])];
     const photo: Photo = {
       id: editId || `p${Date.now()}`,
       title: form.title || "Untitled",
@@ -100,6 +136,13 @@ export default function AdminUpload() {
       settings: form.settings,
       width: form.width || 1600,
       height: form.height || 1067,
+      uploadedAt: editId
+        ? getUploadedAt({
+          id: editId,
+          date: form.date || new Date().toISOString().slice(0, 10),
+          uploadedAt: form.uploadedAt,
+        })
+        : new Date().toISOString(),
     };
     try {
       savePhoto(photo);
@@ -121,13 +164,13 @@ export default function AdminUpload() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0908] pt-28 px-8 md:px-16 pb-24">
+    <div className="min-h-screen bg-background pt-28 px-8 md:px-16 pb-24">
       <div className="max-w-3xl mx-auto">
         <div className="mb-12">
-          <Link to="/admin" className="text-xs tracking-[0.18em] uppercase text-[#5a5248] hover:text-[#c9a87c] transition-colors">
+          <Link to="/admin" className="text-xs tracking-[0.18em] uppercase text-muted-foreground hover:text-primary transition-colors">
             ← Studio
           </Link>
-          <h1 className="font-['DM_Serif_Display'] text-4xl text-[#e8ddd0] mt-6">
+          <h1 className="font-['DM_Serif_Display'] text-4xl text-foreground mt-6">
             {editId ? "Edit Photograph" : "Upload Photograph"}
           </h1>
         </div>
@@ -135,9 +178,9 @@ export default function AdminUpload() {
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Image upload */}
           <div>
-            <p className="text-[10px] tracking-[0.2em] uppercase text-[#5a5248] mb-3">Image</p>
+            <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-3">Image</p>
             <div
-              className="border border-dashed border-[#2a2620] hover:border-[#c9a87c] transition-colors cursor-pointer relative overflow-hidden"
+              className="border border-dashed border-border hover:border-primary transition-colors cursor-pointer relative overflow-hidden"
               onClick={() => fileRef.current?.click()}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
@@ -149,14 +192,14 @@ export default function AdminUpload() {
               {preview ? (
                 <img src={preview} alt="Preview" className="w-full h-64 object-cover" />
               ) : (
-                <div className="h-48 flex flex-col items-center justify-center text-[#3a3630]">
+                <div className="h-48 flex flex-col items-center justify-center text-muted-foreground">
                   <p className="text-sm font-light">Drop image or click to browse</p>
                   <p className="text-xs mt-1">JPEG, PNG, WebP</p>
                 </div>
               )}
               {uploading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-[#0a0908]/70">
-                  <p className="text-xs tracking-widest uppercase text-[#c9a87c]">Loading…</p>
+                <div className="absolute inset-0 flex items-center justify-center bg-background/70">
+                  <p className="text-xs tracking-widest uppercase text-primary">Loading…</p>
                 </div>
               )}
             </div>
@@ -166,7 +209,7 @@ export default function AdminUpload() {
             }} />
 
             <div className="mt-4">
-              <p className="text-[10px] tracking-[0.2em] uppercase text-[#5a5248] mb-2">Or paste image URL</p>
+              <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-2">Or paste image URL</p>
               <input
                 type="url"
                 placeholder="https://..."
@@ -177,7 +220,7 @@ export default function AdminUpload() {
                   setPreview(e.target.value);
                   setError("");
                 }}
-                className="w-full bg-[#111009] border border-[#2a2620] text-[#e8ddd0] placeholder:text-[#3a3630] text-sm font-light px-4 py-3 focus:outline-none focus:border-[#c9a87c] transition-colors"
+                className="w-full bg-card border border-border text-foreground placeholder:text-muted-foreground text-sm font-light px-4 py-3 focus:outline-none focus:border-ring transition-colors"
               />
             </div>
           </div>
@@ -199,8 +242,36 @@ export default function AdminUpload() {
             </Field>
           </div>
 
-          <Field label="Tags (comma-separated)">
-            <input value={tagInput} onChange={(e) => setTagInput(e.target.value)} className="field-input" placeholder="landscape, desert, golden hour" />
+          <Field label="Categories">
+            <div className="flex flex-wrap gap-2">
+              <span className="border border-primary bg-primary px-4 py-2 text-xs uppercase tracking-[0.16em] text-primary-foreground">
+                All
+              </span>
+              {CATEGORY_OPTIONS.map((category) => {
+                const selected = selectedCategories.includes(category.tag);
+                return (
+                  <button
+                    key={category.tag}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => toggleCategory(category.tag)}
+                    className={`border px-4 py-2 text-xs uppercase tracking-[0.16em] transition-colors ${selected
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border text-muted-foreground hover:border-primary hover:text-foreground"
+                      }`}
+                  >
+                    {category.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-xs font-light text-muted-foreground">
+              Every photograph appears in All. Select any additional collections it belongs to.
+            </p>
+          </Field>
+
+          <Field label="Additional tags (optional)">
+            <input value={tagInput} onChange={(e) => setTagInput(e.target.value)} className="field-input" placeholder="desert, golden hour, macro" />
           </Field>
 
           <div className="grid grid-cols-3 gap-4">
@@ -219,16 +290,16 @@ export default function AdminUpload() {
             <button
               type="submit"
               disabled={saved || uploading || saving}
-              className="text-xs tracking-[0.2em] uppercase bg-[#c9a87c] text-[#0a0908] px-8 py-3 hover:bg-[#e8ddd0] transition-colors font-medium disabled:opacity-50"
+              className="text-xs tracking-[0.2em] uppercase bg-primary text-primary-foreground px-8 py-3 hover:bg-foreground transition-colors font-medium disabled:opacity-50"
             >
               {saved ? "Saved ✓" : saving ? "Saving…" : editId ? "Save Changes" : "Publish"}
             </button>
-            <Link to="/admin" className="text-xs tracking-[0.2em] uppercase border border-[#2a2620] text-[#5a5248] px-8 py-3 hover:border-[#5a5248] transition-colors">
+            <Link to="/admin" className="text-xs tracking-[0.2em] uppercase border border-border text-muted-foreground px-8 py-3 hover:border-muted-foreground transition-colors">
               Cancel
             </Link>
           </div>
           {error && (
-            <p role="alert" className="text-sm text-[#c9a87c]">
+            <p role="alert" className="text-sm text-primary">
               {error}
             </p>
           )}
@@ -238,17 +309,17 @@ export default function AdminUpload() {
       <style>{`
         .field-input {
           width: 100%;
-          background: #111009;
-          border: 1px solid #2a2620;
-          color: #e8ddd0;
+          background: var(--card);
+          border: 1px solid var(--border);
+          color: var(--foreground);
           font-size: 0.875rem;
           font-weight: 300;
           padding: 0.75rem 1rem;
           outline: none;
           transition: border-color 0.2s;
         }
-        .field-input::placeholder { color: #3a3630; }
-        .field-input:focus { border-color: #c9a87c; }
+        .field-input::placeholder { color: var(--muted-foreground); }
+        .field-input:focus { border-color: var(--ring); }
       `}</style>
     </div>
   );
@@ -286,8 +357,8 @@ function resizeImage(
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[10px] tracking-[0.2em] uppercase text-[#5a5248] mb-2">
-        {label}{required && <span className="text-[#c9a87c] ml-1">*</span>}
+      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-2">
+        {label}{required && <span className="text-primary ml-1">*</span>}
       </p>
       {children}
     </div>
