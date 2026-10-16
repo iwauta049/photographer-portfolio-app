@@ -9,19 +9,60 @@ export default function PhotoDetail() {
   const [photo, setPhoto] = useState<Photo | undefined>();
   const [adjacent, setAdjacent] = useState<{ prev?: Photo; next?: Photo }>({});
   const admin = isAdmin();
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const navState = location.state as { fromCategory?: string; photoIds?: string[] } | null;
+  const fromCategory = navState?.fromCategory;
+  const photoIds = navState?.photoIds;
 
+  // Prev / next follow the list the gallery was showing (same category, search
+  // and sort). Opened directly without that list, they fall back to all photos.
   useEffect(() => {
     if (!id) return;
-    const p = getPhoto(id);
-    setPhoto(p);
+    setPhoto(getPhoto(id));
     const all = getPhotos();
-    const idx = all.findIndex((x) => x.id === id);
+    let list = all;
+    if (photoIds && photoIds.includes(id)) {
+      const byId = new Map(all.map((x) => [x.id, x]));
+      list = photoIds.map((pid) => byId.get(pid)).filter((x): x is Photo => !!x);
+    }
+    const idx = list.findIndex((x) => x.id === id);
     setAdjacent({
-      prev: idx > 0 ? all[idx - 1] : undefined,
-      next: idx < all.length - 1 ? all[idx + 1] : undefined,
+      prev: idx > 0 ? list[idx - 1] : undefined,
+      next: idx >= 0 && idx < list.length - 1 ? list[idx + 1] : undefined,
     });
     window.scrollTo(0, 0);
   }, [id]);
+
+  // Go to a neighbouring photo, keeping the list; replace so Back still leaves the category.
+  function goTo(target?: Photo) {
+    if (!target) return;
+    navigate(`/photo/${target.id}`, { state: { fromCategory, photoIds }, replace: true });
+  }
+
+  // Escape closes, arrow keys move through the category; background scroll is locked while open
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsFullscreen(false);
+      } else if (e.key === "ArrowLeft") {
+        goTo(adjacent.prev);
+      } else if (e.key === "ArrowRight") {
+        goTo(adjacent.next);
+      }
+    };
+
+    if (isFullscreen) {
+      window.addEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [isFullscreen, adjacent]);
 
   if (!photo) {
     return (
@@ -40,7 +81,6 @@ export default function PhotoDetail() {
   }
 
   const isPortrait = photo.height > photo.width;
-  const fromCategory = (location.state as { fromCategory?: string } | null)?.fromCategory;
   const backPath = fromCategory
     ? `/?category=${encodeURIComponent(fromCategory)}`
     : "/";
@@ -57,6 +97,8 @@ export default function PhotoDetail() {
         >
           {backLabel}
         </Link>
+
+        {/* Main Photo Viewer */}
         <div
           className={`w-full lg:flex lg:h-[calc(100vh-6rem)] lg:items-center lg:justify-center lg:p-8 ${isPortrait ? "flex justify-center px-4 md:px-16" : ""
             }`}
@@ -65,14 +107,16 @@ export default function PhotoDetail() {
             <img
               src={photo.src}
               alt={photo.title}
-              className="max-h-[85vh] w-auto object-contain lg:max-h-full"
+              onClick={() => setIsFullscreen(true)}
+              className="max-h-[85vh] w-auto object-contain lg:max-h-full cursor-zoom-in"
               style={{ maxWidth: "min(600px, 100%)" }}
             />
           ) : (
             <img
               src={photo.src}
               alt={photo.title}
-              className="w-full object-cover lg:max-h-full lg:object-contain"
+              onClick={() => setIsFullscreen(true)}
+              className="w-full object-cover lg:max-h-full lg:object-contain cursor-zoom-in"
               style={{ maxHeight: "90vh", objectPosition: "center" }}
             />
           )}
@@ -128,7 +172,7 @@ export default function PhotoDetail() {
         {adjacent.prev ? (
           <Link
             to={`/photo/${adjacent.prev.id}`}
-            state={{ fromCategory }}
+            state={{ fromCategory, photoIds }}
             className="group flex items-center gap-5 p-8 hover:bg-secondary-foreground transition-colors"
           >
             <img src={adjacent.prev.thumb} alt={adjacent.prev.title} className="w-20 h-14 object-cover opacity-50 group-hover:opacity-100 transition-opacity" />
@@ -142,7 +186,7 @@ export default function PhotoDetail() {
         {adjacent.next ? (
           <Link
             to={`/photo/${adjacent.next.id}`}
-            state={{ fromCategory }}
+            state={{ fromCategory, photoIds }}
             className="group flex items-center justify-end gap-5 p-8 hover:bg-secondary-foreground transition-colors accent-l accent-accent text-right"
           >
             <div>
@@ -160,7 +204,69 @@ export default function PhotoDetail() {
           {backLabel}
         </Link>
       </div>
+
+      {/* Full Screen Modal Overlay */}
+      {isFullscreen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm cursor-zoom-out"
+          onClick={() => setIsFullscreen(false)}
+        >
+          {/* Close Button */}
+          <button
+            className="absolute top-4 right-4 z-10 p-2 text-3xl font-light text-white hover:text-gray-300 focus:outline-none"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsFullscreen(false);
+            }}
+            aria-label="Close fullscreen view"
+          >
+            &times;
+          </button>
+
+          {/* Previous / next within the current category */}
+          {adjacent.prev && (
+            <button
+              className="absolute left-2 top-1/2 z-10 -translate-y-1/2 p-3 text-white/70 hover:text-white focus:outline-none md:left-6"
+              onClick={(e) => {
+                e.stopPropagation();
+                goTo(adjacent.prev);
+              }}
+              aria-label="Previous photograph"
+            >
+              <Chevron direction="left" />
+            </button>
+          )}
+          {adjacent.next && (
+            <button
+              className="absolute right-2 top-1/2 z-10 -translate-y-1/2 p-3 text-white/70 hover:text-white focus:outline-none md:right-6"
+              onClick={(e) => {
+                e.stopPropagation();
+                goTo(adjacent.next);
+              }}
+              aria-label="Next photograph"
+            >
+              <Chevron direction="right" />
+            </button>
+          )}
+
+          {/* Fullscreen Image Preview */}
+          <img
+            src={photo.src}
+            alt={photo.title}
+            className="max-w-[95vw] max-h-[95vh] object-contain select-none transition-transform duration-300 ease-out"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
+  );
+}
+
+function Chevron({ direction }: { direction: "left" | "right" }) {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={direction === "left" ? "M15 4 L7 12 L15 20" : "M9 4 L17 12 L9 20"} />
+    </svg>
   );
 }
 

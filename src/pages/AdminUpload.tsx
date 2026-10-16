@@ -5,8 +5,11 @@ import { getPhoto, getUploadedAt, savePhoto, isAdmin, type Photo } from "../data
 const CATEGORY_OPTIONS = [
   { label: "Favorites", tag: "favorite", aliases: ["favorite", "favorites"] },
   { label: "Birds", tag: "bird", aliases: ["bird", "birds"] },
-  { label: "Mammals", tag: "mammal", aliases: ["mammal", "mammals"] },
-  { label: "Other Wildlife", tag: "wildlife", aliases: ["wildlife"] },
+  {
+    label: "Mammals and More",
+    tag: "wildlife",
+    aliases: ["mammal", "mammals", "wildlife", "reptile", "amphibian", "insect"],
+  },
   { label: "Landscape", tag: "landscape", aliases: ["landscape"] },
   { label: "Street", tag: "street", aliases: ["street"] },
 ] as const;
@@ -37,15 +40,15 @@ export default function AdminUpload() {
       const p = getPhoto(editId);
       if (p) {
         const normalizedTags = p.tags.map((tag) => tag.toLowerCase());
-        const isBirdOrMammal = normalizedTags.some((tag) =>
-          ["bird", "birds", "mammal", "mammals"].includes(tag),
-        );
+        const isMammal = normalizedTags.some((tag) => ["mammal", "mammals"].includes(tag));
+        const isBird = normalizedTags.some((tag) => ["bird", "birds"].includes(tag));
         setForm(p);
         setPreview(p.thumb || p.src);
         setSelectedCategories(
           CATEGORY_OPTIONS.filter(
             (option) =>
-              !(option.tag === "wildlife" && isBirdOrMammal) &&
+              // Same rule as the gallery: a bird only counts as "Mammals and More" if it is also a mammal.
+              !(option.tag === "wildlife" && isBird && !isMammal) &&
               option.aliases.some((alias) => normalizedTags.includes(alias)),
           ).map((option) => option.tag),
         );

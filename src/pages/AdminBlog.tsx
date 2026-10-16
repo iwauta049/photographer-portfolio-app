@@ -20,8 +20,8 @@ const COVER_GALLERY_FILTERS = [
   "All",
   "Favorites",
   "Birds",
-  "Mammals",
-  "Other Wildlife",
+  "Mammals and More",
+  // "Other Wildlife",
   "Landscape",
   "Street",
 ] as const;
@@ -45,18 +45,18 @@ function matchesCoverCategory(tags: string[], category: string) {
   const categoryTags: Record<string, string[]> = {
     Favorites: ["favorite", "favorites"],
     Birds: ["bird", "birds"],
-    Mammals: ["mammal", "mammals"],
-    "Other Wildlife": ["wildlife", "reptile", "amphibian", "insect"],
+    "Mammals and More": ["mammal", "mammals", "wildlife", "reptile", "amphibian", "insect"],
+    // "Other Wildlife": ["wildlife", "reptile", "amphibian", "insect"],
     Landscape: ["landscape"],
     Street: ["street"],
   };
 
-  if (category === "Other Wildlife") {
-    const isBirdOrMammal = ["bird", "birds", "mammal", "mammals"].some((tag) =>
-      normalizedTags.includes(tag),
-    );
-    if (isBirdOrMammal) return false;
-  }
+  // if (category === "Other Wildlife") {
+  //   const isBirdOrMammal = ["bird", "birds", "mammal and more", "mammals"].some((tag) =>
+  //     normalizedTags.includes(tag),
+  //   );
+  //   if (isBirdOrMammal) return false;
+  // }
 
   return (categoryTags[category] || []).some((tag) => normalizedTags.includes(tag));
 }
@@ -522,8 +522,8 @@ export default function AdminBlog() {
                               setShowCoverGallery(false);
                             }}
                             className={`overflow-hidden border-2 bg-card text-left transition ${selected
-                                ? "border-primary"
-                                : "border-transparent opacity-70 hover:opacity-100"
+                              ? "border-primary"
+                              : "border-transparent opacity-70 hover:opacity-100"
                               }`}
                           >
                             <img
@@ -669,8 +669,8 @@ export default function AdminBlog() {
                     setShowImageTools((visible) => !visible);
                   }}
                   className={`px-3 py-2 text-xs uppercase tracking-[0.12em] ${showImageTools
-                      ? "bg-primary text-primary-foreground"
-                      : "text-primary hover:bg-secondary"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-primary hover:bg-secondary"
                     }`}
                 >
                   {uploadingImage ? "Uploading…" : "+ Image"}
@@ -684,8 +684,8 @@ export default function AdminBlog() {
                     setShowLinkTools((visible) => !visible);
                   }}
                   className={`px-3 py-2 text-xs uppercase tracking-[0.12em] ${showLinkTools
-                      ? "bg-primary text-primary-foreground"
-                      : "text-primary hover:bg-secondary"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-primary hover:bg-secondary"
                     }`}
                 >
                   + Link
@@ -925,8 +925,8 @@ function ToolbarButton({
       }}
       aria-pressed={active}
       className={`min-w-10 px-3 py-2 text-xs ${active
-          ? "bg-primary text-primary-foreground"
-          : "text-secondary-foreground hover:bg-secondary hover:text-foreground"
+        ? "bg-primary text-primary-foreground"
+        : "text-secondary-foreground hover:bg-secondary hover:text-foreground"
         }`}
     >
       {children}

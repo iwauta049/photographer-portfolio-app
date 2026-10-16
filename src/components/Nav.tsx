@@ -6,7 +6,7 @@ const portfolioCategories = [
   "All",
   "Favorites",
   "Birds",
-  "Mammals",
+  "Mammals and More",
   "Other Wildlife",
   "Landscape",
   "Street",
@@ -35,9 +35,9 @@ export default function Nav() {
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-6 md:px-16"
-      style={{ background: "linear-gradient(to bottom, rgba(250,246,239,0.95) 0%, rgba(250,246,239,0) 100%)" }}>
-      <Link to="/" className="font-['DM_Serif_Display'] text-lg tracking-widest uppercase text-card-foreground hover:text-primary">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4 md:px-16"
+      style={{ background: "linear-gradient(to bottom, rgba(250,246,239,0.95) 0%, rgba(255,255,255,0.1) 100%)" }}>
+      <Link to="/" className="font-['DM_Serif_Display'] text-lg tracking-widest uppercase text-foreground hover:text-primary">
         Poojan Gohil
       </Link>
 
@@ -55,8 +55,8 @@ export default function Nav() {
                 to={l.to}
                 onClick={() => setPortfolioOpen(false)}
                 className={`text-xs tracking-[0.18em] uppercase transition-colors ${isActive(l.to)
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-card-foreground"
+                  ? "text-primary font-bold"
+                  : "text-foreground hover:text-card-foreground"
                   }`}
               >
                 {l.label}
@@ -89,8 +89,8 @@ export default function Nav() {
               key={l.to}
               to={l.to}
               className={`text-xs tracking-[0.18em] uppercase transition-colors ${isActive(l.to)
-                ? "text-primary"
-                : "text-muted-foreground hover:text-card-foreground"
+                ? "text-primary font-bold"
+                : "text-foreground hover:text-card-foreground"
                 }`}
             >
               {l.label}
@@ -101,14 +101,14 @@ export default function Nav() {
           <>
             <Link
               to="/admin"
-              className={`text-xs tracking-[0.18em] uppercase transition-colors ${isActive("/admin") ? "text-primary" : "text-muted-foreground hover:text-card-foreground"
+              className={`text-xs tracking-[0.18em] uppercase transition-colors ${isActive("/admin") ? "text-primary font-bold" : "text-foreground hover:text-card-foreground"
                 }`}
             >
               Studio
             </Link>
             <button
               onClick={handleLogout}
-              className="text-xs tracking-[0.18em] uppercase text-muted-foreground hover:text-primary"
+              className="text-xs tracking-[0.18em] uppercase text-foreground hover:text-primary"
             >
               Sign out
             </button>
@@ -116,7 +116,7 @@ export default function Nav() {
         ) : (
           <Link
             to="/admin"
-            className="text-xs tracking-[0.18em] uppercase text-border hover:text-muted-foreground transition-colors"
+            className="text-xs tracking-[0.18em] uppercase text-foreground hover:text-card-foreground transition-colors"
           >
             ·
           </Link>

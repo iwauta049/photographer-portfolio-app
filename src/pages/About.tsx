@@ -38,7 +38,7 @@ export default function About() {
 
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
-              to="/?category=All"
+              to="/"
               className="bg-primary px-6 py-3 text-xs font-medium uppercase tracking-[0.18em] text-primary-foreground hover:bg-foreground"
             >
               View Portfolio

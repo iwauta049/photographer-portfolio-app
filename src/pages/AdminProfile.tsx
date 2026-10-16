@@ -128,7 +128,7 @@ export default function AdminProfile() {
     });
   }
 
-  function handleProfilePhotoFile(file: File) {
+  function handleprofileImageFile(file: File) {
     setPhotoProcessing(true);
     setPhotoError("");
 
@@ -137,7 +137,7 @@ export default function AdminProfile() {
 
     img.onload = () => {
       try {
-        update("profilePhoto", resizeImage(img, 1200, 0.8, 500_000));
+        update("profileImage", resizeImage(img, 1200, 0.8, 500_000));
       } catch {
         setPhotoError("This image could not be processed. Please try a JPEG, PNG, or WebP file.");
       } finally {
@@ -318,9 +318,9 @@ export default function AdminProfile() {
             <FieldLabel>About page photo</FieldLabel>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,16rem)_1fr]">
               <div className="relative aspect-[4/5] overflow-hidden bg-card">
-                {profile.profilePhoto ? (
+                {profile.profileImage ? (
                   <img
-                    src={profile.profilePhoto}
+                    src={profile.profileImage}
                     alt="About page photo preview"
                     className="absolute inset-0 h-full w-full object-cover"
                   />
@@ -352,14 +352,14 @@ export default function AdminProfile() {
                     className="hidden"
                     onChange={(event) => {
                       const file = event.target.files?.[0];
-                      if (file) handleProfilePhotoFile(file);
+                      if (file) handleprofileImageFile(file);
                       event.target.value = "";
                     }}
                   />
-                  {profile.profilePhoto && (
+                  {profile.profileImage && (
                     <button
                       type="button"
-                      onClick={() => update("profilePhoto", "")}
+                      onClick={() => update("profileImage", "")}
                       className="text-xs uppercase tracking-[0.16em] text-muted-foreground hover:text-primary"
                     >
                       Remove photo
@@ -371,9 +371,9 @@ export default function AdminProfile() {
                   <FieldLabel>Or paste an image URL</FieldLabel>
                   <input
                     type="url"
-                    value={(profile.profilePhoto ?? "").startsWith("data:") ? "" : profile.profilePhoto ?? ""}
+                    value={(profile.profileImage ?? "").startsWith("data:") ? "" : profile.profileImage ?? ""}
                     onChange={(event) => {
-                      update("profilePhoto", event.target.value);
+                      update("profileImage", event.target.value);
                       setPhotoError("");
                     }}
                     placeholder="https://..."

@@ -30,6 +30,9 @@ export interface BlogPost {
 }
 
 export interface Profile {
+  heroX: number;
+  heroY: number;
+  heroZoom: number;
   heroImage: string;
   profileImage?: string;
   location: string;
@@ -385,6 +388,14 @@ export function getPhotos(): Photo[] {
 
 export function getPhoto(id: string): Photo | undefined {
   return getPhotos().find((p) => p.id === id);
+}
+
+export function getPhotosByCategory(category?: string): Photo[] {
+  const photos = getPhotos();
+  if (!category || category === "All") {
+    return photos;
+  }
+  return photos.filter((p) => p.tags.includes(category));
 }
 
 export function savePhoto(photo: Photo) {

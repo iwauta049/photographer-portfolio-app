@@ -23,9 +23,9 @@
 /* 
 :root {
   --background: #0a0908;
-  --foreground: #e8ddd0;
+  --foreground: secondary-foreground;
   --card: #111009;
-  --card-foreground: #e8ddd0;
+  --card-foreground: secondary-foreground;
   --primary: #c9a87c;
   --primary-foreground: #0a0908;
   --secondary: #1c1a15;

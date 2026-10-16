@@ -81,7 +81,7 @@ export default function BlogPostPage() {
             {post.tags.map((tag) => (
               <span
                 key={tag}
-                className="border border-secondary-foreground px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
+                className="border border-secondary-foreground px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-foreground"
               >
                 {tag}
               </span>
@@ -106,7 +106,7 @@ export default function BlogPostPage() {
             </Link>
             <button
               onClick={handleDelete}
-              className="text-xs tracking-[0.18em] uppercase text-muted-foreground border border-secondary-foreground px-5 py-2 hover:border-primary hover:text-primary transition-colors"
+              className="text-xs tracking-[0.18em] uppercase text-muted-foreground border border-secondary-foreground px-5 py-2 hover:text-primary-foreground hover:bg-muted-foreground transition-colors"
             >
               Delete
             </button>
@@ -121,7 +121,7 @@ export default function BlogPostPage() {
       </div>
       <style>{`
         .article-rich-text {
-          color: #c4b89e;
+          color: var(--secondary-foreground);
           font-size: 1rem;
           font-weight: 300;
           line-height: 1.85;
@@ -130,7 +130,7 @@ export default function BlogPostPage() {
         .article-rich-text p { margin: 0 0 1.5rem; }
         .article-rich-text h2 {
           margin: 2.75rem 0 1rem;
-          color: #e8ddd0;
+          color: var(--foreground);;
           font-family: 'DM Serif Display', serif;
           font-size: 2rem;
           font-weight: 400;
@@ -138,14 +138,14 @@ export default function BlogPostPage() {
         }
         .article-rich-text h3 {
           margin: 2.25rem 0 0.85rem;
-          color: #e8ddd0;
+          color: var(--foreground);;
           font-family: 'DM Serif Display', serif;
           font-size: 1.5rem;
           font-weight: 400;
           line-height: 1.3;
         }
         .article-rich-text strong,
-        .article-rich-text b { color: #e8ddd0; font-weight: 600; }
+        .article-rich-text b { color: var(--foreground);; font-weight: 600; }
         .article-rich-text em,
         .article-rich-text i { font-style: italic; }
         .article-rich-text u { text-decoration: underline; text-underline-offset: 0.15em; }
@@ -160,12 +160,12 @@ export default function BlogPostPage() {
           text-decoration-thickness: 1px;
           text-underline-offset: 0.2em;
         }
-        .article-rich-text a:hover { color: #e8ddd0; }
+        .article-rich-text a:hover { color: var(--foreground);; }
         .article-rich-text figure { margin: 2.5rem 0; }
         .article-rich-text figure img { width: 100%; height: auto; object-fit: contain; }
         .article-rich-text figcaption {
           margin-top: 0.75rem;
-          color: #7a7062;
+          color: var(--muted-foreground);
           font-size: 0.75rem;
           font-weight: 300;
           line-height: 1.6;
